@@ -1,86 +1,30 @@
-const https = require('https');
+const http = require('http');
 const fs = require('fs');
-const WebSocket = require('ws');
+const path = require('path');
 
-const server = https.createServer();
-
-const wss = new WebSocket.Server({ server });
-
-const registeredUsers = new Map();
-
-wss.on('connection', (ws) => {
-    console.log("A Client Conencted!")
-    let authenticatedUser = null;
-
-    ws.on('message', (message) => {
-        try {
-            const data = JSON.parse(message);
-
-            if (data.type === 'login') {
-                const { username } = data;
-                if (!registeredUsers.has(username)) {
-                    ws.send(
-                        JSON.stringify({
-                            type: 'error',
-                            message: 'User not registered. Please register first.',
-                        })
-                    );
-                    return;
-                }
-                authenticatedUser = username;
-                ws.send(
-                    JSON.stringify({
-                        type: 'success',
-                        message: `User ${username} logged in successfully.`,
-                    })
-                );
-            } else if (data.type === 'message') {
-                if (!authenticatedUser) {
-                    ws.send(
-                        JSON.stringify({
-                            type: 'error',
-                            message: 'You must log in first to send messages.',
-                        })
-                    );
-                    return;
-                }
-                const { content } = data;
-                wss.clients.forEach((client) => {
-                    if (client !== ws && client.readyState === WebSocket.OPEN) {
-                        client.send(
-                            JSON.stringify({
-                                type: 'message',
-                                user: authenticatedUser,
-                                content,
-                            })
-                        );
-                    }
-                });
-            } else {
-                ws.send(
-                    JSON.stringify({
-                        type: 'error',
-                        message: 'Unknown command.',
-                    })
-                );
-            }
-        } catch (err) {
-            ws.send(
-                JSON.stringify({
-                    type: 'error',
-                    message: 'Invalid message format.',
-                })
-            );
-        }
+// Create a basic HTTP server
+const server = http.createServer((req, res) => {
+  // Serve the HTML file when accessed
+  if (req.url === '/') {
+    const filePath = path.join(__dirname, 'index.html');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) {
+        res.statusCode = 500;
+        res.end('Error reading the HTML file.');
+        return;
+      }
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/html');
+      res.end(data);
     });
-
-    ws.on('close', () => {
-        if (authenticatedUser) {
-            console.log(`User ${authenticatedUser} disconnected.`);
-        }
-    });
+  } else {
+    res.statusCode = 404;
+    res.end('Not Found');
+  }
 });
 
-server.listen(443, () => {
-    console.log('WSS Server running on port 443');
+// Set the server to listen on port 80 (default HTTP port)
+const PORT = 4565;
+server.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });

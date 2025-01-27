@@ -81,6 +81,6 @@ wss.on('connection', (ws) => {
     });
 });
 
-server.listen(process.env.PORT || 4000, () => {
-    console.log(`WSS Server running on port ${process.env.PORT || 4000}`);
+server.listen(5156, () => {
+    console.log(`WSS Server running on port 5156`);
 });

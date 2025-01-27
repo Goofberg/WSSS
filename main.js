@@ -1,10 +1,7 @@
-const https = require('https');
-const fs = require('fs');
 const WebSocket = require('ws');
 
-const server = https.createServer();
-
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ port: 5156 });
+console.log(`WSS Server running on port 5156`);
 
 const registeredUsers = new Map();
 
@@ -79,8 +76,4 @@ wss.on('connection', (ws) => {
             console.log(`User ${authenticatedUser} disconnected.`);
         }
     });
-});
-
-server.listen(5156, () => {
-    console.log(`WSS Server running on port 5156`);
 });
